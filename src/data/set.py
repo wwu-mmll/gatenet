@@ -51,7 +51,7 @@ class GatingDataset:
                 labels = self.add_rest_class(labels)
             labels = self.reverse_one_hot_encode(labels, self.vocab)
         else:
-            labels = labels[multiclass_col]
+            labels = labels[multiclass_col] if isinstance(multiclass_col, str) else labels.iloc[:, 0]
         return self.to_categorical(labels, self.vocab)
 
     def dummy_labels(self):
