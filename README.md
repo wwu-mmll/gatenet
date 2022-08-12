@@ -9,4 +9,4 @@ The cell identification is typically done manually based on 2D scatter plots of 
 In manual gating, the scatter points (i.e. cell measurements) are partitioned (’gated’) upon visual inspection.
 
 Here, traditional manual gating (of leukocytes i.e. population in the center) of three probes is shown:
-[til](./data/manual_gating.gif)
+[til](data/manual_gating.gif)
