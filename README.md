@@ -1,14 +1,25 @@
 # GateNet
 This is the official implementation of the [GateNet paper](https://www.nature.com/ncomms/).
-## Introduction
+
+## Tutorials
+There are two tutorials which can serve as a starting point for your own analysis.
+
+1. [Tutorial](tutorials/flowcap_data.ipynb): Model training and model prediction (+ cross validation) using the [ND dataset]() published (incl. manual gating) during FlowCAP I
+
+2. [Tutorial](tutorials/custom_data.ipynb): Creation of training data (i.e. manual gating) for custom data using [FlowCytometryTools](https://github.com/eyurtsev/FlowCytometryTools).
+This way, manual gating, model training and prediction with custom data is all possible within one Jupyter notebook!
+
+## Why GateNet?
 GateNet is a neural network architecture which is specifically designed for automated flow cytometry gating.
+
+### Introduction
 
 Flow cytometry (FC) is an analytical technique which is used to **identify cell types**. 
 Inputted with a sample (e.g. blood) containing cells, it **sequentially measures** each cells individual light scatter and fluorescence emission properties.
 The cell identification is typically done manually based on 2D scatter plots of the resulting measurements of all cells in the probe.
 In manual gating, the scatter points (i.e. cell measurements) are partitioned (’gated’) upon visual inspection.
 ### Manual Gating
-Here, traditional manual gating (of leukocytes i.e. population in the center) of three probes is shown:
+Here, traditional manual gating (of leukocytes i.e. population in the center) of three samples is shown:
 
 ![manual gating](data/manual_gating.gif)
 
@@ -18,20 +29,20 @@ Nonetheless, it is inevitable since the distribution of scatter points varies du
 ### Automated Gating (with GateNet)
 Gating can be automated using a GateNet which was trained with gated samples.
 
-As shown in examples/custom_tutorial.ipynb GateNet can be trained with only 5 training samples.
+As shown in the [Tutorial](tutorials/custom_data.ipynb) GateNet can be trained with only 5 training samples.
 Since GateNet is implemented in PyTorch, training and prediction can be GPU-accelerated such that automated gating only takes seconds.
 These are the **results of the automated gating** (with only 5 training samples) on 15 unseen samples:
 
 ![results](data/autogates.png)
 
-## Method
+### Method
 
 GateNets key feature is to take into account the context of measurements alongside a single cell/event measurement. 
 So, to predict the class/type of a single cell the neural network is feed with the single event measurement + (ca. 1000) event measurements of the same sample.  
 
 This allows it to **autonomously correct for batch effects** as it "sees the scatter plot" not just the single scatter point!
 
-![gatenet](data/gatenet.png){width=250}
+![gatenet](data/gatenet.png)
 
 ## Installation
 
@@ -56,8 +67,3 @@ mamba install -c anaconda seaborn
 ```
 pip install git+https://github.com/wwu-mmll/gatenet@main
 ```
-
-## Tutorial
-
-To train GateNet, we need FCS-Files (.fcs, .lmd or .csv) with FC measurements and the respective cell labels.
-For 
