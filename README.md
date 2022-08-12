@@ -1,5 +1,5 @@
 # GateNet
-This is the official implementation of the [GateNet paper](https://www.nature.com/ncomms/). 
+This is the official implementation of the [GateNet paper](https://www.nature.com/ncomms/).
 ## Introduction
 GateNet is a neural network architecture which is specifically designed for automated flow cytometry gating.
 
@@ -19,13 +19,45 @@ Nonetheless, it is inevitable since the distribution of scatter points varies du
 Gating can be automated using a GateNet which was trained with gated samples.
 
 As shown in examples/custom_tutorial.ipynb GateNet can be trained with only 5 training samples.
-Since GateNet is implemented in PyTorch, GPU-acceleration during training and prediction is possible such that automated gating only takes seconds.
-
+Since GateNet is implemented in PyTorch, training and prediction can be GPU-accelerated such that automated gating only takes seconds.
+These are the **results of the automated gating** (with only 5 training samples) on 15 unseen samples:
 
 ![results](data/autogates.png)
 
-GateNets key feature is to take into account the context of measurements alongside the single event measurement for its prediction.
+## Method
 
-![gatenet](data/gatenet.png)
+GateNets key feature is to take into account the context of measurements alongside a single cell/event measurement. 
+So, to predict the class/type of a single cell the neural network is feed with the single event measurement + (ca. 1000) event measurements of the same sample.  
 
+This allows it to **autonomously correct for batch effects** as it "sees the scatter plot" not just the single scatter point!
 
+![gatenet](data/gatenet.png){width=250}
+
+## Installation
+
+### 0. Install Anaconda (if you haven't already)
+First, [Anaconda](https://www.anaconda.com/products/distribution) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html) should be installed 
+
+### 1. Create new conda environment
+```
+conda create -n gatenet python=3.9
+conda activate gatenet
+```
+### 2. Install dependencies
+```
+conda install -c conda-forge mamba
+mamba install -c fastchan fastai anaconda
+mamba install -c bioconda fcsparser
+mamba install -c conda-forge pyarrow
+mamba install -c anaconda seaborn
+```
+
+### 3. Install gatenet
+```
+pip install git+https://github.com/wwu-mmll/gatenet@main
+```
+
+## Tutorial
+
+To train GateNet, we need FCS-Files (.fcs, .lmd or .csv) with FC measurements and the respective cell labels.
+For 
