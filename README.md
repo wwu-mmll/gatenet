@@ -1,5 +1,5 @@
 # GateNet
-This is the official implementation of the [GateNet paper]([https://www.nature.com/ncomms/](https://arxiv.org/abs/2312.07316)).
+This is the official implementation of the [GateNet paper]([https://arxiv.org/abs/2312.07316]).
 
 ## Tutorials
 There are two tutorials which can serve as a starting point for your own analysis.
