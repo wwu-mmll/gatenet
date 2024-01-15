@@ -1,5 +1,5 @@
 # GateNet
-This is the official implementation of the [GateNet paper](https://www.nature.com/ncomms/).
+This is the official implementation of the [GateNet paper]([https://www.nature.com/ncomms/](https://arxiv.org/abs/2312.07316)).
 
 ## Tutorials
 There are two tutorials which can serve as a starting point for your own analysis.
@@ -67,3 +67,11 @@ mamba install -c anaconda seaborn
 ```bash
 pip install git+https://github.com/wwu-mmll/gatenet@main
 ```
+## Citation
+If you find this code useful in your research, please consider citing:
+
+    @inproceedings{gatenet,
+    Lukas Fisch, Michael O. Heming, Andreas Schulte-Mecklenbeck, Catharina C. Gross, Stefan Zumdick, Carlotta Barkhau, Daniel Emden, Jan Ernsting, Ramona Leenings, Kelvin Sarink, Nils R. Winter, Udo Dannlowski, Heinz Wiendl, Gerd Meyer zu Hörste, Tim Hahn},
+    Title = {GateNet: A novel Neural Network Architecture for Automated Flow Cytometry Gating},
+    Year = {2023}
+    }
