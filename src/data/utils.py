@@ -5,10 +5,10 @@ FCS_SUFFIXES = ('.fcs', '.lmd', '.LMD')
 
 
 def fcs_label_df(unique_substr, fcs_dir, labels_dir):
-    fcs_filepath = filepaths(fcs_dir, unique_substr, list(FCS_SUFFIXES))[0]
-    label_filepath = filepaths(labels_dir, unique_substr, '.csv')[0]
+    fcs_filepath = filepaths(fcs_dir, unique_substr, list(FCS_SUFFIXES)).tolist()[0]
+    label_filepath = filepaths(labels_dir, unique_substr, ['.csv', '.ftr']).tolist()[0]
     fcs = fcsparser.parse(fcs_filepath, reformat_meta=True)[1]
-    label = pd.read_csv(label_filepath)
+    label = pd.read_feather(label_filepath) if label_filepath[-4:] == '.ftr' else pd.read_csv(label_filepath)
     return pd.concat([fcs, label], axis=1)
 
 
@@ -31,3 +31,12 @@ def filepaths(path: str, substr: Union[list, str] = None, file_types: Union[list
     for ft in file_types:
         filepaths += sorted(glob.glob(f'{path}/*{substr}*{ft}'))
     return pd.Series(sorted(filepaths)).reset_index(drop=True)
+
+
+def get_norm_stats(fps: Iterable):
+    df = []
+    for f in fps:
+        df.append(fcsparser.parse(f, reformat_meta=True)[1])
+    df = pd.concat(df)
+    norm_stats = [df.mean(axis=0), df.std(axis=0)]
+    return pd.DataFrame(norm_stats).to_dict('list')

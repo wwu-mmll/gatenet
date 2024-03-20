@@ -1,52 +1,35 @@
-from typing import Iterable
-from pandas import DataFrame
 from fastai.basics import pd, torch, F, Learner
 
-from .train import get_dls, get_learner
-from .data.scaling import apply_scaling, INV_SCALING_METHODS
+from .train import get_dls, get_learner, DL_KEYS
 
 
-def predict(model_path: str, df: DataFrame, hparams: dict, ds_kwargs: dict = None,
-            outputs: Iterable = ('data', 'preds', 'targs')) -> DataFrame:
-    dls = get_dls(df, df, hparams['bs'], hparams['n_context_events'], ds_kwargs)
+def predict(model_path: str, df: pd.DataFrame, hparams: dict, ds_kwargs: dict = None, dl_kwargs: dict = None,
+            with_data: bool = True, with_targs: bool = True, progress_bar: bool = False) -> pd.DataFrame:
+    dl_kwargs.update(**{k: hparams[k] for k in DL_KEYS})
+    dls = get_dls(df.iloc[:1], df, ds_kwargs, dl_kwargs)
     if len(dls.fcs) == 0:
         return pd.DataFrame([], columns=ds_kwargs['vocab'] + ['id'])
-    hparams.update({'n_markers': len(dls.dataset.fcs.columns) - 1, 'n_gates': len(dls.dataset.vocab)})
+    hparams.update({'n_markers': dls.fcs.shape[1], 'n_gates': len(dls.vocab)})
     learn = get_learner(dls, hparams)
-    checkpoint = torch.load(model_path)
-    learn.model.load_state_dict(checkpoint)
-    result = get_learner_results(learn, outputs)
+    learn.model.load_state_dict(torch.load(model_path))
+    result = get_results(learn, with_data, with_targs, progress_bar)
     return result
 
 
-def get_learner_results(learn: Learner, keep_outputs: Iterable = ('data', 'preds', 'targs')) -> DataFrame:
-    markers = learn.dls.fcs.columns.tolist()[:-1]
-    gates = list(learn.dls.vocab)
-    act = None if len(gates) == 2 else lambda x: x
-    total_output = learn.get_preds(with_input=True, reorder=False, act=act)
-    output_map = {'data': 0, 'preds': 1, 'targs': 2}
-    output_dfs = []
-    for ko in keep_outputs:
-        output_tensor = total_output[output_map[ko]]
-        df = output_tensor_to_df(output_tensor, ko, markers, gates, learn.dls.valid_ds.fcs.index)
-        output_dfs.append(df)
-    df = pd.concat(output_dfs + [learn.dls.valid_ds.fcs.iloc[:, -1:]], axis=1)
-    if 'data' in keep_outputs:
-        df.loc[:, markers] = apply_scaling(df.loc[:, markers], learn.dls.fcs_scaling, INV_SCALING_METHODS)
-    return df
-
-
-def output_tensor_to_df(output, name, markers, gates, idx):
-    output_cols = {'data': markers, 'preds': [f'{g}_pred' for g in gates], 'targs': gates}
-    if name == 'data':
-        output = output[0]
-    elif name == 'targs' or (name == 'preds' and len(gates) == 2):
-        output = to_one_hot_encoded(output.squeeze(), len(gates))
-    return DataFrame(output, idx, output_cols[name])
-
-
-def to_one_hot_encoded(x: torch.Tensor, n_classes: int) -> torch.Tensor:
-    if n_classes > 2:
-        return F.one_hot(x, n_classes)
+def get_results(learn: Learner, with_data: bool = True, with_targs: bool = True,
+                progress_bar: bool = False) -> pd.DataFrame:
+    marker, idx, gates = learn.dls.fcs.columns, learn.dls[1].fcs.index, list(learn.dls.vocab)
+    results = []
+    if with_data:
+        results.append(learn.dls[1].dataset.fcs)
+    if progress_bar:
+        preds, targs = learn.get_preds(dl=learn.dls[1], reorder=False, act=lambda x: x)
     else:
-        return torch.stack([1 - x, x], 1)
+        with learn.no_bar():
+            preds, targs = learn.get_preds(dl=learn.dls[1], reorder=False, act=lambda x: x)
+    results.append(pd.DataFrame(preds, idx, [f'{g}_pred' for g in gates]))
+    if with_targs:
+        results.append(pd.DataFrame(F.one_hot(targs.view(-1), len(gates)), idx, gates))
+    results = pd.concat(results, axis=1)
+    results['id'] = learn.dls[1].ids
+    return results

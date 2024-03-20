@@ -4,7 +4,7 @@ from pandas import DataFrame
 from fastai.basics import np, torch, tensor, Path
 from sklearn.metrics import confusion_matrix, classification_report
 
-from .metrics import get_metrics
+from .metrics import METRICS
 
 
 def evaluate_cv(res: DataFrame, save_dir: str = None) -> Tuple[DataFrame, DataFrame, DataFrame]:
@@ -18,9 +18,8 @@ def evaluate_cv(res: DataFrame, save_dir: str = None) -> Tuple[DataFrame, DataFr
     return metrics, cm, report
 
 
-def cv_metrics_table(res: DataFrame) -> DataFrame:
+def cv_metrics_table(res: DataFrame, metrics: dict = METRICS) -> DataFrame:
     preds_cols, targs_cols = get_preds_targs_cols(res)
-    metrics = get_metrics(n_classes=len(targs_cols), sigmoid=False)
     table = []
     for i in res['fold'].unique():
         df_fold = res[res.fold == i]
@@ -33,13 +32,11 @@ def cv_metrics_table(res: DataFrame) -> DataFrame:
     return table
 
 
-# TODO: Can this be done cleaner?
 def calc_metrics(preds: DataFrame, targs: DataFrame, metrics: dict) -> dict:
-    binary = preds.shape[1] == 2
     preds, targs = tensor(preds), tensor(targs)
     targs = torch.argmax(targs, dim=1)
     preds_ = torch.argmax(preds, dim=1)
-    values = [m(preds, targs) if not binary and name == 'ACC' else m(preds_, targs) for name, m in metrics.items()]
+    values = [m(preds, targs) if name == 'ACC' else m(preds_, targs) for name, m in metrics.items()]
     values = [m if isinstance(m, float) else m.item() for m in values]
     return {name: value for (name, _), value in zip(metrics.items(), values)}
 
